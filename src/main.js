@@ -14,14 +14,14 @@ import { DEFAULTS, createSession, finalize } from './slide.js';
 // This file is exactly one z14 tile rendered at 1024 px (verified by overlaying
 // OSM roads on the heatmap — see test/overlay.mjs), so the cell size is
 // simply "world circumference / (tiles across * pixels across)".
-const TILE = { z: 14, x: 12812, y: 8038, size: 1024, file: '8038@2x.png' };
-const R = 6378137;
-const EARTH_C = 2 * Math.PI * R;
-const N = 2 ** TILE.z;
-const IMG = TILE.size;
-const CELL = EARTH_C / (N * IMG); // metres per image pixel
-const ORIGIN_X = (TILE.x / N) * EARTH_C - EARTH_C / 2;
-const ORIGIN_Y = EARTH_C / 2 - (TILE.y / N) * EARTH_C;
+const TILE = { z: 14, x: 12812, y: 8038, size: 1024, file: '8038@2x.png' }; // Zoom level, tile number from (0,0) origin and file name for the local Strava heatmap tile
+const R = 6378137; // Radius of the Earth in metres, in Web Mercator projection
+const EARTH_C = 2 * Math.PI * R; // Circumference of the Earth in metres at the equator, in Web Mercator projection
+const N = 2 ** TILE.z; // Number of tiles across at this zoom level, e.g. 2^14 = 16384 tiles across at z14
+const IMG = TILE.size; // Square image size in pixels across (the Strava heatmap tile is 1024 px)
+const CELL = EARTH_C / (N * IMG); // metres per image pixel. earth's circumference / (number of tiles across * pixels per tile across) = 2.388 m/px at z14
+const ORIGIN_X = (TILE.x / N) * EARTH_C - EARTH_C / 2; // ) The distance in meters from the Prime Meridian to the left edge of this tile (positive is East, negative is West). The left edge of the tile is at (tile.x / N) * EARTH_C, and we subtract half the circumference to get the coordinate relative to the origin (i.e. prime meridian).
+const ORIGIN_Y = EARTH_C / 2 - (TILE.y / N) * EARTH_C; // The distance in meters from the Equator to the top edge of this tile (positive is North, negative is South). The top edge of the tile is at (tile.y / N) * EARTH_C, and we subtract that from half the circumference to get the coordinate relative to the origin (i.e. equator).
 
 function tileLat(row) {
   return (Math.atan(Math.sinh(Math.PI - (2 * Math.PI * row) / N)) * 180) / Math.PI;
@@ -217,6 +217,7 @@ function clonePath(p) {
   return p.map((v) => [v[0], v[1]]);
 }
 
+// Convert a path in image pixels to a Float64Array in metres, ready for Slide.
 function pxToMetres(path) {
   const out = new Float64Array(path.length * 2);
   for (let i = 0; i < path.length; i++) {
@@ -226,6 +227,7 @@ function pxToMetres(path) {
   return out;
 }
 
+// Convert a Float64Array in metres to a path in image pixels.
 function metresToPx(flat) {
   const out = [];
   for (let i = 0; i < flat.length; i += 2) out.push([flat[i] / CELL, flat[i + 1] / CELL]);

@@ -87,6 +87,9 @@ lat = (2·atan(exp((ORIGIN_Y − my)/R)) − π/2) * 180/π
 
 ## The algorithm
 
+> Full click-by-click walkthrough — px→metres, resampling, the four force terms,
+> the stopping rule, trim and Douglas–Peucker: **[docs/slide-button-pipeline.md](docs/slide-button-pipeline.md)**
+
 Each iteration moves every *interior* vertex by a weighted sum:
 
 | term | default | what it does |
@@ -198,6 +201,7 @@ Everything below is measured by `test/selftest.mjs` §6:
 
 ```
 index.html        sidebar + canvas shell
+docs/             slide-button-pipeline.md — step-by-step run of the pipeline
 src/geometry.js   resample, Douglas–Peucker, trim
 src/surface.js    colour→value, gaussian kernel, Surface, SmoothSurface
 src/slide.js      DEFAULTS, preparePath, createSession, finalize
